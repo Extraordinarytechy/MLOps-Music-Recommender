@@ -9,6 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    # 1. Start a PostgreSQL database service for this job
     services:
       postgres:
         image: postgres:14-alpine
@@ -17,7 +19,8 @@ jobs:
           POSTGRES_PASSWORD: secret
           POSTGRES_DB: melorec_db
         ports:
-          - 5432:5432
+          # Use port 5433 to match your local config
+          - 5433:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
@@ -25,11 +28,12 @@ jobs:
           --health-retries 5
 
     strategy:
-      matrix:
-        python-version: ['3.10']  
+      matrix: 
+        python-version: ['3.10']
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
       with:
         lfs: true
 
@@ -42,21 +46,32 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest  # Ensure pytest is installed
+        pip install pytest
+    
+    - name: Ingest Data into Test DB
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5433 
+      run: |
+        python3 scripts/ingest_data.py
         
     - name: Run tests
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5433
       run: |
         python3 -m pytest
  
   build:
-    needs: test
+    needs: test 
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
       with:
         lfs: true
-    
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       
