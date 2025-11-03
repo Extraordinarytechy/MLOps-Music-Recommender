@@ -9,6 +9,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: melorec_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     strategy:
       matrix:
         python-version: ['3.9']
@@ -28,7 +43,7 @@ jobs:
         
     - name: Run tests
       run: |
-        python3 -m pytest  
+        python3 -m pytest
  
   build:
     needs: test
