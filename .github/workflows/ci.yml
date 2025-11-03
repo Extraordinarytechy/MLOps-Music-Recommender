@@ -64,6 +64,11 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     
+    permissions:
+      contents: read
+      packages: write
+    # ---------------------
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -85,6 +90,4 @@ jobs:
       with:
         context: .
         push: true
-        # We are manually writing the lowercase name
         tags: ghcr.io/extraordinarytechy/mlops-music-recommender:latest
-
