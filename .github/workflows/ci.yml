@@ -10,7 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    # 1. Start a PostgreSQL database service for this job
     services:
       postgres:
         image: postgres:14-alpine
@@ -19,7 +18,6 @@ jobs:
           POSTGRES_PASSWORD: secret
           POSTGRES_DB: melorec_db
         ports:
-          # Use port 5433 to match your local config
           - 5433:5432
         options: >-
           --health-cmd pg_isready
@@ -28,7 +26,7 @@ jobs:
           --health-retries 5
 
     strategy:
-      matrix: 
+      matrix:
         python-version: ['3.10']
 
     steps:
@@ -63,7 +61,7 @@ jobs:
         python3 -m pytest
  
   build:
-    needs: test 
+    needs: test
     runs-on: ubuntu-latest
     
     steps:
@@ -87,4 +85,6 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository }}:latest
+        # We are manually writing the lowercase name
+        tags: ghcr.io/extraordinarytechy/mlops-music-recommender:latest
+
