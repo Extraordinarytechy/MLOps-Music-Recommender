@@ -7,7 +7,7 @@
 
 A complete, production-grade MLOps project that builds, trains and deploys a collaborative filtering model to serve real-time song recommendations.
 
-![Screenshot of the MeloRec API docs page](doc/api-docs.png)
+![Screenshot of the MeloRec API docs page](doc/api-docs.jpg)
 
 ## Core Features
 
