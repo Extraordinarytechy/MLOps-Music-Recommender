@@ -1,28 +1,17 @@
 import pytest
+import pandas as pd  # <-- Import pandas for our mock
 from melorec.models import predict
-
-# We need to mock the model and its dependencies
-# This is an advanced testing technique.
-# For a simpler test, we'd need a tiny, saved test model.
-
-# Let's mock the 'predict' function inside the model object
-# This is a bit complex, so a simpler 'smoke test' might be better.
 
 @pytest.fixture(autouse=True)
 def mock_model_and_data(monkeypatch):
-    """
-    This 'fixture' automatically runs for all tests in this file.
-    It replaces the real model and data with fakes.
-    """
     
-    # Fake a simple prediction object from the 'surprise' library
+    # 1. Mock the 'surprise' model's prediction object
     class MockPrediction:
         def __init__(self, est):
             self.est = est
             
-    # Fake the model's 'predict' method
+    # 2. Mock the 'model.predict' function
     def mock_predict(uid, iid):
-        # Return a high score for song_1 and low for song_2
         if iid == 'song_1':
             return MockPrediction(est=5.0)
         elif iid == 'song_2':
@@ -30,14 +19,36 @@ def mock_model_and_data(monkeypatch):
         else:
             return MockPrediction(est=3.0)
 
-    # Fake the list of all songs
+    # 3. Mock the list of all songs
     mock_all_songs = ['song_1', 'song_2', 'song_3']
     
-    # 'monkeypatch' is a pytest tool to swap real objects with fakes
+    # 4. Mock the database 'get_song_details' function
+    def mock_get_details(song_ids: list) -> pd.DataFrame:
+        # Create a fake DataFrame that matches what the function expects
+        data = {
+            'song_1': {'title': 'Mock Song 1', 'artist': 'Mock Artist 1'},
+            'song_2': {'title': 'Mock Song 2', 'artist': 'Mock Artist 2'},
+            'song_3': {'title': 'Mock Song 3', 'artist': 'Mock Artist 3'},
+        }
+        
+        results = []
+        for sid in song_ids:
+            if sid in data:
+                results.append({
+                    'song_id': sid,
+                    'title': data[sid]['title'],
+                    'artist': data[sid]['artist']
+                })
+        return pd.DataFrame(results)
+
+    # --- Apply all the mocks ---
     if hasattr(predict, 'model'):
         monkeypatch.setattr(predict.model, 'predict', mock_predict)
     
     monkeypatch.setattr(predict, 'ALL_SONG_IDS', mock_all_songs)
+    
+    monkeypatch.setattr(predict, 'get_song_details', mock_get_details)
+
 
 def test_generate_recommendations_format():
     """
@@ -45,15 +56,10 @@ def test_generate_recommendations_format():
     """
     user_id = "test_user"
     recs = predict.generate_recommendations(user_id, n=2)
-    
+
     assert isinstance(recs, list)
     assert len(recs) == 2
-    
-    # Check the first recommendation
-    first_rec = recs[0]
-    assert isinstance(first_rec, dict)
-    assert "song_id" in first_rec
-    assert "estimated_score" in first_rec
+    assert recs[0]['title'] == 'Mock Song 1'
 
 def test_generate_recommendations_sorting():
     """
@@ -62,12 +68,8 @@ def test_generate_recommendations_sorting():
     """
     user_id = "test_user"
     recs = predict.generate_recommendations(user_id, n=3)
-    
+
+    assert len(recs) == 3
     assert recs[0]['song_id'] == 'song_1'
-    assert recs[0]['estimated_score'] == 5.0
-    
     assert recs[1]['song_id'] == 'song_3'
-    assert recs[1]['estimated_score'] == 3.0
-    
     assert recs[2]['song_id'] == 'song_2'
-    assert recs[2]['estimated_score'] == 1.0
