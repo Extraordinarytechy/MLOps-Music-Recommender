@@ -1,0 +1,14 @@
+**/.DS_Store
+**/.git
+**/.gitignore
+**/__pycache__
+**/*.pyc
+.dockerignore
+.venv/
+venv/
+data/
+scripts/
+tests/
+docker-compose.yml
+README.md
+mlruns/
