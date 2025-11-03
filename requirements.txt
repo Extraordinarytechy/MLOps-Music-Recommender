@@ -1,22 +1,11 @@
-API
-
 fastapi
 uvicorn[standard]
-
-Database
-
 sqlalchemy
 psycopg2-binary
-
-ML & Data
-
 pandas
 scikit-surprise
 mlflow
 joblib
-numpy<2.0  
-
-Testing
-
+numpy<2.0
 pytest
 httpx
